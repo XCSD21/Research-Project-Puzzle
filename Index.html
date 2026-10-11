@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unlock the Answer</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 24px 14px;
+  background: #102c27;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+main { max-width: 540px; margin: auto; }
+p { line-height: 1.5; color: #d3e6de; }
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin: 20px auto;
+  padding: 3px;
+  background: #d3e6de;
+  border-radius: 8px;
+}
+
+.tile {
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  border: 2px solid transparent;
+  border-radius: 3px;
+  background-image: url("project-venn.jpg");
+  background-size: 400% 400%;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tile.selected { border: 3px solid #facc15; }
+
+button:not(.tile) {
+  padding: 13px 18px;
+  margin: 5px;
+  border: 0;
+  border-radius: 8px;
+  background: #a7e3c0;
+  color: #102c27;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+#result {
+  display: none;
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #20473e;
+}
+
+#result img { width: 100%; border-radius: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>UNLOCK THE ANSWER</h1>
+  <p>Solve the puzzle to reveal our project output!</p>
+  <p id="moves">Moves: 0</p>
+  <p>Tap one piece, then another, to swap them.</p>
+
+  <div id="board"></div>
+  <button id="shuffle">Shuffle Again</button>
+
+  <section id="result">
+    <h2>🎉 PUZZLE SOLVED!</h2>
+    <p>You unlocked our project!</p>
+    <img src="project-venn.jpg" alt="Completed project output">
+    <h3>Venn Diagram Completed!</h3>
+    <p>You solved the puzzle and revealed our my final output.</p>
+  </section>
+</main>
+
+<script>
+const N = 4;
+const TOTAL = N * N;
+const board = document.getElementById("board");
+const result = document.getElementById("result");
+let pieces = [];
+let selected = null;
+let moves = 0;
+
+function solved() {
+  return pieces.every((p, i) => p === i);
+}
+
+function shuffle() {
+  do {
+    pieces = Array.from({length: TOTAL}, (_, i) => i);
+    for (let i = TOTAL - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
+    }
+  } while (solved());
+
+  selected = null;
+  moves = 0;
+  result.style.display = "none";
+  document.getElementById("moves").textContent = "Moves: 0";
+  render();
+}
+
+function render() {
+  board.innerHTML = "";
+
+  pieces.forEach((piece, index) => {
+    const tile = document.createElement("button");
+    tile.className = "tile";
+    tile.setAttribute("aria-label", "Piece " + (index + 1));
+
+    const row = Math.floor(piece / N);
+    const col = piece % N;
+    tile.style.backgroundPosition =
+      (col / (N - 1) * 100) + "% " +
+      (row / (N - 1) * 100) + "%";
+
+    if (selected === index) tile.classList.add("selected");
+    tile.addEventListener("click", () => choose(index));
+    board.appendChild(tile);
+  });
+}
+
+function choose(index) {
+  if (selected === null) {
+    selected = index;
+    render();
+    return;
+  }
+
+  if (selected === index) {
+    selected = null;
+    render();
+    return;
+  }
+
+  [pieces[selected], pieces[index]] =
+    [pieces[index], pieces[selected]];
+
+  selected = null;
+  moves++;
+  document.getElementById("moves").textContent =
+    "Moves: " + moves;
+
+  render();
+
+  if (solved()) {
+    result.style.display = "block";
+    result.scrollIntoView({behavior: "smooth"});
+  }
+}
+
+document.getElementById("shuffle").addEventListener("click", shuffle);
+shuffle();
+</script>
+</body>
+</html>
